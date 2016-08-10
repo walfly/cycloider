@@ -16040,111 +16040,256 @@ vec4.equals = function (a, b) {
 module.exports = vec4;
 
 },{"./common.js":3}],12:[function(require,module,exports){
+'use strict';
+
 var d3 = require('d3');
+var FulcrumDisk = require('./parts/FulcrumDisk.js');
 var Disk = require('./parts/Disk.js');
+var Link = require('./parts/Link.js');
 var Point = require('./parts/Point.js');
 var width = window.innerWidth;
 var height = window.innerHeight;
 
-var disk = new Disk(50, 50);
-var point = new Point(60, 60);
-disk.addPoint(point);
+var disk1 = new FulcrumDisk(50, 50, 100, { clockwise: false, millisecondsPerRotation: 325 });
+var disk2 = new FulcrumDisk(width - 150, height - 350, 150, { millisecondsPerRotation: 666 });
+var link = new Link(disk1, disk2);
+var drawingDisk = new Disk(width / 2 + 75, height / 2, { millisecondsPerRotation: 2333 });
 
+var svg = d3.select("body").append("svg").attr("width", width).attr("height", height);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+var linkGroup = svg.append('g');
+var cycleGroup = svg.append('g');
 
-var diskGroup = svg.append('g');
+var linearFunction = d3.svg.line().x(function (d) {
+  return d.x;
+}).y(function (d) {
+  return d.y;
+}).interpolate('basis');
 
-function update () {
-  console.log('' + disk.points[0].x + ' ' + disk.points[0].y);
-  disk.update();
-  console.log('' + disk.points[0].x + ' ' + disk.points[0].y);
-  var points = diskGroup.selectAll("circle")
-           .data(disk.points);
+function update(timestamp) {
+  link.update(timestamp);
+  drawingDisk.update(timestamp);
+  var drawingPoint = link.getDrawPoint();
+  drawingDisk.addPoint(new Point(drawingPoint[0], drawingPoint[1]));
 
-  points.enter()
-           .append('circle')
-           .attr("r", 2)
-           .style("fill", 'blue');
-  points.attr("cx", function (d) { return d.x; })
-           .attr("cy", function (d) { return d.y; });
+  var dp = linkGroup.selectAll('circle').data([drawingPoint]);
+
+  dp.enter().append('circle').attr('r', 10).style('fill', 'red');
+
+  dp.attr('cx', function (d) {
+    return d[0];
+  }).attr('cy', function (d) {
+    return d[1];
+  });
+
+  dp.exit().remove();
+
+  cycleGroup.selectAll('path').remove();
+
+  cycleGroup.append('path').datum(drawingDisk.points).attr('d', linearFunction).style('fill', 'none').style('stroke', "#000").attr('stroke-width', 1);
+
+  var links = linkGroup.selectAll("line").data([link]);
+
+  links.enter().append('line').attr("stroke-width", 5).style("stroke", 'blue');
+
+  links.exit().remove();
+
+  links.attr("x1", function (d) {
+    return d.start.getFulcrumPoint().x;
+  }).attr("y1", function (d) {
+    return d.start.getFulcrumPoint().y;
+  }).attr("x2", function (d) {
+    return d.end.getFulcrumPoint().x;
+  }).attr("y2", function (d) {
+    return d.end.getFulcrumPoint().y;
+  });
+
+  // window.requestAnimationFrame(update);
 };
-
-update();
 
 setInterval(update, 32);
 
+// window.requestAnimationFrame(update);
 
-},{"./parts/Disk.js":14,"./parts/Point.js":15,"d3":1}],13:[function(require,module,exports){
+},{"./parts/Disk.js":14,"./parts/FulcrumDisk.js":15,"./parts/Link.js":16,"./parts/Point.js":17,"d3":1}],13:[function(require,module,exports){
+"use strict";
+
 module.exports = {
   ONE_FRAME: 32
 };
 
 },{}],14:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var glMatrix = require('gl-matrix');
 var constants = require('../constants.js');
 var Point = require('./Point.js');
 
-var Disk = function (x, y, options) {
-  options = options || {};
-  this.clockwise = options.clockwise || true;
-  this.millisecondsPerRotation = options.millisecondsPerRotation || 1000;
-  this.framesPerRotation = this.calculateFramesPR();
-  this.x = x;
-  this.y = y;
-  this.points = [];
-};
+var Disk = function () {
+  function Disk(x, y, options) {
+    _classCallCheck(this, Disk);
 
-Disk.prototype.calculateFramesPR = function() {
-  return this.millisecondsPerRotation/constants.ONE_FRAME;
-};
+    options = options || {};
+    this.clockwise = options.clockwise || true;
+    this.millisecondsPerRotation = options.millisecondsPerRotation || 1000;
+    this.x = x;
+    this.y = y;
+    this.points = [];
+  }
 
-Disk.prototype.addPoint = function (vec2) {
-  this.points.push(vec2);
-  return this;
-};
+  _createClass(Disk, [{
+    key: 'calculateFramesPR',
+    value: function calculateFramesPR(elapsedTime) {
+      return this.millisecondsPerRotation / elapsedTime;
+    }
+  }, {
+    key: 'addPoint',
+    value: function addPoint(vec2) {
+      this.points.push(vec2);
+      return this;
+    }
+  }, {
+    key: 'setMillisecondsPerRotation',
+    value: function setMillisecondsPerRotation(milliseconds) {
+      this.millisecondsPerRotation = milliseconds;
+      return this;
+    }
+  }, {
+    key: 'rotatePoints',
+    value: function rotatePoints(elapsedTime) {
+      var fpr = this.calculateFramesPR(elapsedTime);
+      return this.points.map(this.rotatePoint.bind(this, fpr));
+    }
+  }, {
+    key: 'rotatePoint',
+    value: function rotatePoint(fpr, point) {
+      var deltaX = point.x - this.x;
+      var deltaY = point.y - this.y;
+      var radius = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      var curTheta = Math.atan2(deltaY, deltaX);
+      var circumfrence = 2 * Math.PI * radius;
+      var distance = circumfrence / fpr;
+      var deltaTheta = distance / radius;
+      var newTheta = this.clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
+      var newDeltaX = radius * Math.cos(newTheta);
+      var newDeltaY = radius * Math.sin(newTheta);
+      return new Point(this.x + newDeltaX, this.y + newDeltaY);
+    }
+  }, {
+    key: 'update',
+    value: function update(timestamp) {
+      // if(!this.timestamp) {
+      //   this.timestamp = timestamp;
+      //   return this;
+      // }
+      // var elapsedTime = timestamp - this.timestamp;
+      // this.timestamp = timestamp;
+      this.points = this.rotatePoints(32);
+      return this;
+    }
+  }]);
 
-Disk.prototype.setMillisecondsPerRotation = function (milliseconds) {
-  this.millisecondsPerRotation = milliseconds;
-  this.framesPerRotation = this.calculateFramesPR();
-  return this;
-};
+  return Disk;
+}();
 
-Disk.prototype.rotatePoints = function () {
-  return this.points.map(this.rotatePoint.bind(this));
-};
-
-Disk.prototype.rotatePoint = function (point) {
-  var deltaX = point.x - this.x;
-  var deltaY = point.y - this.y;
-  var radius = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-  var curTheta = Math.atan2(deltaY, deltaX);
-  var circumfrence = 2 * Math.PI * radius;
-  var distance = circumfrence/this.framesPerRotation;
-  var deltaTheta = distance/radius;
-  var newTheta = this.clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
-  var newDeltaX = radius * Math.cos(newTheta);
-  var newDeltaY = radius * Math.sin(newTheta);
-  debugger;
-  return new Point(this.x + newDeltaX, this.y + newDeltaY);
-};
-
-Disk.prototype.update = function() {
-  this.points = this.rotatePoints();
-  return this;
-};
+;
 
 module.exports = Disk;
 
-},{"../constants.js":13,"./Point.js":15,"gl-matrix":2}],15:[function(require,module,exports){
+},{"../constants.js":13,"./Point.js":17,"gl-matrix":2}],15:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Disk = require('./Disk.js');
+var Point = require('./Point.js');
+
+var FulcrumDisk = function (_Disk) {
+  _inherits(FulcrumDisk, _Disk);
+
+  function FulcrumDisk(x, y, radius, options) {
+    _classCallCheck(this, FulcrumDisk);
+
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FulcrumDisk).call(this, x, y, options));
+
+    _this.addPoint(new Point(x + radius, y));
+    return _this;
+  }
+
+  _createClass(FulcrumDisk, [{
+    key: 'getFulcrumPoint',
+    value: function getFulcrumPoint() {
+      return this.points[0];
+    }
+  }]);
+
+  return FulcrumDisk;
+}(Disk);
+
+;
+
+module.exports = FulcrumDisk;
+
+},{"./Disk.js":14,"./Point.js":17}],16:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var glMatrix = require('gl-matrix');
 
-var Point = function (x, y) {
+var Link = function () {
+  function Link(startFulcrum, endFulcrum, drawingDist) {
+    _classCallCheck(this, Link);
+
+    this.start = startFulcrum;
+    this.end = endFulcrum;
+  }
+
+  _createClass(Link, [{
+    key: 'update',
+    value: function update(timestamp) {
+      this.start = this.start.update(timestamp);
+      this.end = this.end.update(timestamp);
+      return this;
+    }
+  }, {
+    key: 'getDrawPoint',
+    value: function getDrawPoint() {
+      var vector = glMatrix.vec2.create();
+
+      glMatrix.vec2.lerp(vector, this.start.getFulcrumPoint().vector, this.end.getFulcrumPoint().vector, 0.48);
+      return vector;
+    }
+  }]);
+
+  return Link;
+}();
+
+;
+
+module.exports = Link;
+
+},{"gl-matrix":2}],17:[function(require,module,exports){
+'use strict';
+
+var glMatrix = require('gl-matrix');
+
+var Point = function Point(x, y) {
   this.x = x;
   this.y = y;
-  this.vector = glMatrix.vec2.set(glMatrix.vec2.create(), x, y); 
+  this.vector = glMatrix.vec2.set(glMatrix.vec2.create(), x, y);
 };
 
 module.exports = Point;
