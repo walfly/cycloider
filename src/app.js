@@ -6,10 +6,22 @@ var Point = require('./parts/Point.js');
 var width = window.innerWidth;
 var height = window.innerHeight;
 
-var disk1 = new FulcrumDisk(50, 50, 100, {clockwise: false, millisecondsPerRotation: 325});
-var disk2 = new FulcrumDisk(width - 150, height - 350, 150, {millisecondsPerRotation: 666});
+var disk1 = new FulcrumDisk(50, 50, 135, {
+  clockwise: false,
+  millisecondsPerRotation: 223,
+  rotationCenter: new Point(width/2, height/2),
+  speedAroundCenter: 4000
+});
+
+var disk2 = new FulcrumDisk(width - 150, height - 137, 53, {
+  millisecondsPerRotation: 63,
+  rotationCenter: new Point(width/2, height/2),
+  speedAroundCenter: 4000
+});
+
 var link = new Link(disk1, disk2);
-var drawingDisk = new Disk(width/2 + 75, height/2, {millisecondsPerRotation: 2333});
+
+var drawing = [];
 
 var svg = d3.select("body").append("svg")
     .attr("width", width)
@@ -24,13 +36,20 @@ var linearFunction = d3.svg.line()
                            .interpolate('basis');
 
 function update (timestamp) {
+  disk1.rotateDiskAroundCenter();
+  disk2.rotateDiskAroundCenter();
   link.update(timestamp);
-  drawingDisk.update(timestamp);
   var drawingPoint = link.getDrawPoint();
-  drawingDisk.addPoint(new Point(drawingPoint[0], drawingPoint[1]));
+  drawing.push(new Point(drawingPoint[0], drawingPoint[1]));
 
   var dp = linkGroup.selectAll('circle')
-            .data([drawingPoint]);
+            .data([
+              drawingPoint,
+              [disk1.x, disk1.y],
+              [disk2.x, disk2.y], 
+              [disk1.getFulcrumPoint().x, disk1.getFulcrumPoint().y],
+              [disk2.getFulcrumPoint().x, disk2.getFulcrumPoint().y]
+              ]);
 
   dp.enter().append('circle')
             .attr('r', 10)
@@ -44,7 +63,7 @@ function update (timestamp) {
   cycleGroup.selectAll('path').remove();
 
 
-  cycleGroup.append('path').datum(drawingDisk.points)
+  cycleGroup.append('path').datum(drawing)
                            .attr('d', linearFunction)
                            .style('fill', 'none')
                            .style('stroke', "#000")

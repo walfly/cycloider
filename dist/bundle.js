@@ -1,7 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 !function() {
   var d3 = {
-    version: "3.5.16"
+    version: "3.5.17"
   };
   var d3_arraySlice = [].slice, d3_array = function(list) {
     return d3_arraySlice.call(list);
@@ -3526,7 +3526,7 @@
         λ0 = λ, sinφ0 = sinφ, cosφ0 = cosφ, point0 = point;
       }
     }
-    return (polarAngle < -ε || polarAngle < ε && d3_geo_areaRingSum < 0) ^ winding & 1;
+    return (polarAngle < -ε || polarAngle < ε && d3_geo_areaRingSum < -ε) ^ winding & 1;
   }
   function d3_geo_clipCircle(radius) {
     var cr = Math.cos(radius), smallRadius = cr > 0, notHemisphere = abs(cr) > ε, interpolate = d3_geo_circleInterpolate(radius, 6 * d3_radians);
@@ -16050,10 +16050,22 @@ var Point = require('./parts/Point.js');
 var width = window.innerWidth;
 var height = window.innerHeight;
 
-var disk1 = new FulcrumDisk(50, 50, 100, { clockwise: false, millisecondsPerRotation: 325 });
-var disk2 = new FulcrumDisk(width - 150, height - 350, 150, { millisecondsPerRotation: 666 });
+var disk1 = new FulcrumDisk(50, 50, 135, {
+  clockwise: false,
+  millisecondsPerRotation: 223,
+  rotationCenter: new Point(width / 2, height / 2),
+  speedAroundCenter: 4000
+});
+
+var disk2 = new FulcrumDisk(width - 150, height - 137, 53, {
+  millisecondsPerRotation: 63,
+  rotationCenter: new Point(width / 2, height / 2),
+  speedAroundCenter: 4000
+});
+
 var link = new Link(disk1, disk2);
-var drawingDisk = new Disk(width / 2 + 75, height / 2, { millisecondsPerRotation: 2333 });
+
+var drawing = [];
 
 var svg = d3.select("body").append("svg").attr("width", width).attr("height", height);
 
@@ -16067,12 +16079,13 @@ var linearFunction = d3.svg.line().x(function (d) {
 }).interpolate('basis');
 
 function update(timestamp) {
+  disk1.rotateDiskAroundCenter();
+  disk2.rotateDiskAroundCenter();
   link.update(timestamp);
-  drawingDisk.update(timestamp);
   var drawingPoint = link.getDrawPoint();
-  drawingDisk.addPoint(new Point(drawingPoint[0], drawingPoint[1]));
+  drawing.push(new Point(drawingPoint[0], drawingPoint[1]));
 
-  var dp = linkGroup.selectAll('circle').data([drawingPoint]);
+  var dp = linkGroup.selectAll('circle').data([drawingPoint, [disk1.x, disk1.y], [disk2.x, disk2.y], [disk1.getFulcrumPoint().x, disk1.getFulcrumPoint().y], [disk2.getFulcrumPoint().x, disk2.getFulcrumPoint().y]]);
 
   dp.enter().append('circle').attr('r', 10).style('fill', 'red');
 
@@ -16086,7 +16099,7 @@ function update(timestamp) {
 
   cycleGroup.selectAll('path').remove();
 
-  cycleGroup.append('path').datum(drawingDisk.points).attr('d', linearFunction).style('fill', 'none').style('stroke', "#000").attr('stroke-width', 1);
+  cycleGroup.append('path').datum(drawing).attr('d', linearFunction).style('fill', 'none').style('stroke', "#000").attr('stroke-width', 1);
 
   var links = linkGroup.selectAll("line").data([link]);
 
@@ -16167,17 +16180,22 @@ var Disk = function () {
   }, {
     key: 'rotatePoint',
     value: function rotatePoint(fpr, point) {
-      var deltaX = point.x - this.x;
-      var deltaY = point.y - this.y;
+      return this.rotateAroundAPoint(fpr, point, { x: this.x, y: this.y }, this.clockwise);
+    }
+  }, {
+    key: 'rotateAroundAPoint',
+    value: function rotateAroundAPoint(fpr, point, center, clockwise) {
+      var deltaX = point.x - center.x;
+      var deltaY = point.y - center.y;
       var radius = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       var curTheta = Math.atan2(deltaY, deltaX);
       var circumfrence = 2 * Math.PI * radius;
       var distance = circumfrence / fpr;
       var deltaTheta = distance / radius;
-      var newTheta = this.clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
+      var newTheta = clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
       var newDeltaX = radius * Math.cos(newTheta);
       var newDeltaY = radius * Math.sin(newTheta);
-      return new Point(this.x + newDeltaX, this.y + newDeltaY);
+      return new Point(center.x + newDeltaX, center.y + newDeltaY);
     }
   }, {
     key: 'update',
@@ -16222,11 +16240,25 @@ var FulcrumDisk = function (_Disk) {
 
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(FulcrumDisk).call(this, x, y, options));
 
+    _this.rotationCenter = options.rotationCenter;
+    _this.diskRotationSpeed = options.speedAroundCenter;
     _this.addPoint(new Point(x + radius, y));
     return _this;
   }
 
   _createClass(FulcrumDisk, [{
+    key: 'centerFpr',
+    value: function centerFpr(elapsed) {
+      return this.diskRotationSpeed / elapsed;
+    }
+  }, {
+    key: 'rotateDiskAroundCenter',
+    value: function rotateDiskAroundCenter() {
+      var newPoints = this.rotateAroundAPoint(this.centerFpr(32), { x: this.x, y: this.y }, this.rotationCenter, true);
+      this.x = newPoints.x;
+      this.y = newPoints.y;
+    }
+  }, {
     key: 'getFulcrumPoint',
     value: function getFulcrumPoint() {
       return this.points[0];

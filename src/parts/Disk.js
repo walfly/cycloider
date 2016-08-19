@@ -32,17 +32,21 @@ class Disk {
   }
 
   rotatePoint (fpr, point) {
-    var deltaX = point.x - this.x;
-    var deltaY = point.y - this.y;
+    return this.rotateAroundAPoint(fpr, point, {x: this.x, y: this.y}, this.clockwise);
+  }
+
+  rotateAroundAPoint (fpr, point, center, clockwise) {
+    var deltaX = point.x - center.x;
+    var deltaY = point.y - center.y;
     var radius = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
     var curTheta = Math.atan2(deltaY, deltaX);
     var circumfrence = 2 * Math.PI * radius;
     var distance = circumfrence/fpr;
     var deltaTheta = distance/radius;
-    var newTheta = this.clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
+    var newTheta = clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
     var newDeltaX = radius * Math.cos(newTheta);
     var newDeltaY = radius * Math.sin(newTheta);
-    return new Point(this.x + newDeltaX, this.y + newDeltaY);
+    return new Point(center.x + newDeltaX, center.y + newDeltaY);
   }
 
   update (timestamp) {
