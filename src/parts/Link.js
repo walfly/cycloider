@@ -1,21 +1,26 @@
-var glMatrix = require('gl-matrix');
+import glMatrix from 'gl-matrix';
+import Guid from 'guid';
 
-class Link {
+export default class Link {
   constructor(startFulcrum, endFulcrum, drawingDist){
-    this.start = startFulcrum;
-    this.end = endFulcrum;
+    this.startFulcrum = startFulcrum;
+    this.endFulcrum = endFulcrum;
+    this.type = "Link";
+    this.partId = Guid.raw();
+  }
+  start() {
+    return this.startFulcrum.points[0];
+  }
+  end() {
+    return this.endFulcrum.points[0];
   }
   update(timestamp){
-    this.start = this.start.update(timestamp);
-    this.end = this.end.update(timestamp);
     return this;
   }
   getDrawPoint() {
     const vector = glMatrix.vec2.create();
 
-    glMatrix.vec2.lerp(vector, this.start.getFulcrumPoint().vector, this.end.getFulcrumPoint().vector, 0.48);
+    glMatrix.vec2.lerp(vector, this.startFulcrum.getFulcrumPoint().vector, this.endFulcrum.getFulcrumPoint().vector, 0.48);
     return vector;
   }
 };
-
-module.exports = Link;

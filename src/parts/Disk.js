@@ -1,8 +1,9 @@
-const glMatrix = require('gl-matrix');
-const constants = require('../constants.js');
-const Point = require('./Point.js');
+import glMatrix from 'gl-matrix';
+import constants from '../constants.js';
+import Point from './Point.js';
+import Guid from 'guid';
 
-class Disk {
+export default class Disk {
   constructor (x, y, options) {
     options = options || {};
     this.clockwise = options.clockwise || true;
@@ -10,6 +11,8 @@ class Disk {
     this.x = x;
     this.y = y;
     this.points = [];
+    this.partId = Guid.raw();
+    this.type = 'Disk';
   }
 
   calculateFramesPR (elapsedTime) {
@@ -36,16 +39,16 @@ class Disk {
   }
 
   rotateAroundAPoint (fpr, point, center, clockwise) {
-    var deltaX = point.x - center.x;
-    var deltaY = point.y - center.y;
-    var radius = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    var curTheta = Math.atan2(deltaY, deltaX);
-    var circumfrence = 2 * Math.PI * radius;
-    var distance = circumfrence/fpr;
-    var deltaTheta = distance/radius;
-    var newTheta = clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
-    var newDeltaX = radius * Math.cos(newTheta);
-    var newDeltaY = radius * Math.sin(newTheta);
+    const deltaX = point.x - center.x;
+    const deltaY = point.y - center.y;
+    const radius = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
+    const curTheta = Math.atan2(deltaY, deltaX);
+    const circumfrence = 2 * Math.PI * radius;
+    const distance = circumfrence/fpr;
+    const deltaTheta = distance/radius;
+    const newTheta = clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
+    const newDeltaX = radius * Math.cos(newTheta);
+    const newDeltaY = radius * Math.sin(newTheta);
     return new Point(center.x + newDeltaX, center.y + newDeltaY);
   }
 
@@ -60,5 +63,3 @@ class Disk {
     return this;
   }
 };
-
-module.exports = Disk;
