@@ -4,35 +4,37 @@ import FulcrumDisk from './parts/FulcrumDisk.js';
 import Disk from './parts/Disk.js';
 import Link from './parts/Link.js';
 import Point from './parts/Point.js';
+import DrawingSurface from './parts/DrawingSurface.js';
 import App from './reactComponents/App.jsx';
 
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-const disk1 = new FulcrumDisk(150, 150, 135, {
-  clockwise: false,
-  millisecondsPerRotation: 2223,
+const disk1 = new FulcrumDisk(235, 435, 265, {
+  millisecondsPerRotation: 2323,
   rotationCenter: new Point(width/2, height/2),
   speedAroundCenter: 4000
 });
 
-const disk2 = new FulcrumDisk(width - 150, height - 137, 53, {
-  millisecondsPerRotation: 1634,
+const disk2 = new FulcrumDisk(width - 103, height - 103, 103, {
+  millisecondsPerRotation: 534,
   rotationCenter: new Point(width/2, height/2),
   speedAroundCenter: 4000
 });
 
-const link = new Link(disk1, disk2);
+const link = new Link(disk1, disk2, 500);
 
-const drawing = [];
+const drawingSurface = new DrawingSurface(link);
 
 const parts = [
   disk1,
   disk2,
-  link
+  link,
+  drawingSurface
 ];
 
 const app = ReactDom.render(<App width={width} height={height} parts={parts} />, document.getElementById('app'));
+
 const update = function () {
   parts.forEach(part => part.update());
   app.setState({parts: parts});
@@ -101,6 +103,6 @@ const update = function () {
 //   // window.requestAnimationFrame(update);
 // };
 
-setInterval(update, 32);
+setInterval(update, 16);
 
 // window.requestAnimationFrame(update);

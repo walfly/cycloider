@@ -13,7 +13,7 @@ export default class FulcrumDisk extends Disk {
     return this.diskRotationSpeed/elapsed;
   }
   rotateDiskAroundCenter() {
-    const newPoints = this.rotateAroundAPoint(this.centerFpr(32), {x: this.x, y: this.y}, this.rotationCenter, true);
+    const newPoints = this.rotateAroundAPoint(this.centerFpr(10), {x: this.x, y: this.y}, this.rotationCenter, true);
     this.x = newPoints.x;
     this.y = newPoints.y;
   }
@@ -23,7 +23,7 @@ export default class FulcrumDisk extends Disk {
   update() {
     this.rotateDiskAroundCenter();
     this.points = this.points.map((point) => {
-        return this.rotateAroundAPoint(this.centerFpr(32), point, this.rotationCenter, true);
+        return this.rotateAroundAPoint(this.centerFpr(10), point, this.rotationCenter, true);
     });
     return super.update();
   }

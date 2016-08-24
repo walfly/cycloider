@@ -59,7 +59,7 @@ export default class Disk {
     // }
     // var elapsedTime = timestamp - this.timestamp;
     // this.timestamp = timestamp;
-    this.points = this.rotatePoints(32);
+    this.points = this.rotatePoints(10);
     return this;
   }
 };

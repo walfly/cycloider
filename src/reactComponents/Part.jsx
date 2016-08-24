@@ -1,11 +1,13 @@
 import React from 'react';
 import Disk from './Disk.jsx';
 import Link from './Link.jsx';
+import DrawingSurface from './DrawingSurface.jsx';
 const {Component, PropTypes} = React;
 
 const PartTypes = {
     'Disk': Disk,
-    'Link': Link
+    'Link': Link,
+    'DrawingSurface': DrawingSurface
 };
 
 export default class Part extends Component {

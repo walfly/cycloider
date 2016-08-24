@@ -27317,6 +27317,10 @@ var _Point = require('./parts/Point.js');
 
 var _Point2 = _interopRequireDefault(_Point);
 
+var _DrawingSurface = require('./parts/DrawingSurface.js');
+
+var _DrawingSurface2 = _interopRequireDefault(_DrawingSurface);
+
 var _App = require('./reactComponents/App.jsx');
 
 var _App2 = _interopRequireDefault(_App);
@@ -27326,26 +27330,26 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var width = window.innerWidth;
 var height = window.innerHeight;
 
-var disk1 = new _FulcrumDisk2.default(150, 150, 135, {
-  clockwise: false,
-  millisecondsPerRotation: 2223,
+var disk1 = new _FulcrumDisk2.default(235, 435, 265, {
+  millisecondsPerRotation: 2323,
   rotationCenter: new _Point2.default(width / 2, height / 2),
   speedAroundCenter: 4000
 });
 
-var disk2 = new _FulcrumDisk2.default(width - 150, height - 137, 53, {
-  millisecondsPerRotation: 1634,
+var disk2 = new _FulcrumDisk2.default(width - 103, height - 103, 103, {
+  millisecondsPerRotation: 534,
   rotationCenter: new _Point2.default(width / 2, height / 2),
   speedAroundCenter: 4000
 });
 
-var link = new _Link2.default(disk1, disk2);
+var link = new _Link2.default(disk1, disk2, 500);
 
-var drawing = [];
+var drawingSurface = new _DrawingSurface2.default(link);
 
-var parts = [disk1, disk2, link];
+var parts = [disk1, disk2, link, drawingSurface];
 
 var app = _reactDom2.default.render(_react2.default.createElement(_App2.default, { width: width, height: height, parts: parts }), document.getElementById('app'));
+
 var update = function update() {
   parts.forEach(function (part) {
     return part.update();
@@ -27416,11 +27420,11 @@ var update = function update() {
 //   // window.requestAnimationFrame(update);
 // };
 
-setInterval(update, 32);
+setInterval(update, 16);
 
 // window.requestAnimationFrame(update);
 
-},{"./parts/Disk.js":185,"./parts/FulcrumDisk.js":186,"./parts/Link.js":187,"./parts/Point.js":188,"./reactComponents/App.jsx":189,"react":182,"react-dom":13}],184:[function(require,module,exports){
+},{"./parts/Disk.js":185,"./parts/DrawingSurface.js":186,"./parts/FulcrumDisk.js":187,"./parts/Link.js":188,"./parts/Point.js":189,"./reactComponents/App.jsx":190,"react":182,"react-dom":13}],184:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -27522,7 +27526,7 @@ var Disk = function () {
       // }
       // var elapsedTime = timestamp - this.timestamp;
       // this.timestamp = timestamp;
-      this.points = this.rotatePoints(32);
+      this.points = this.rotatePoints(10);
       return this;
     }
   }]);
@@ -27533,7 +27537,50 @@ var Disk = function () {
 exports.default = Disk;
 ;
 
-},{"../constants.js":184,"./Point.js":188,"gl-matrix":2,"guid":12}],186:[function(require,module,exports){
+},{"../constants.js":184,"./Point.js":189,"gl-matrix":2,"guid":12}],186:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _guid = require('guid');
+
+var _guid2 = _interopRequireDefault(_guid);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var DrawingSurface = function () {
+    function DrawingSurface(drawingTool) {
+        _classCallCheck(this, DrawingSurface);
+
+        this.drawingTool = drawingTool;
+        this.pointList = [];
+        this.path = 'M';
+        this.type = 'DrawingSurface';
+        this.partId = _guid2.default.raw();
+    }
+
+    _createClass(DrawingSurface, [{
+        key: 'update',
+        value: function update() {
+            var point = this.drawingTool.getDrawPoint();
+            var pointString = this.path === 'M' ? point[0] + ',' + point[1] : ',' + point[0] + ',' + point[1];
+            this.pointList.push(point);
+            this.path += pointString;
+        }
+    }]);
+
+    return DrawingSurface;
+}();
+
+exports.default = DrawingSurface;
+
+},{"guid":12}],187:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27583,7 +27630,7 @@ var FulcrumDisk = function (_Disk) {
   }, {
     key: 'rotateDiskAroundCenter',
     value: function rotateDiskAroundCenter() {
-      var newPoints = this.rotateAroundAPoint(this.centerFpr(32), { x: this.x, y: this.y }, this.rotationCenter, true);
+      var newPoints = this.rotateAroundAPoint(this.centerFpr(10), { x: this.x, y: this.y }, this.rotationCenter, true);
       this.x = newPoints.x;
       this.y = newPoints.y;
     }
@@ -27599,7 +27646,7 @@ var FulcrumDisk = function (_Disk) {
 
       this.rotateDiskAroundCenter();
       this.points = this.points.map(function (point) {
-        return _this2.rotateAroundAPoint(_this2.centerFpr(32), point, _this2.rotationCenter, true);
+        return _this2.rotateAroundAPoint(_this2.centerFpr(10), point, _this2.rotationCenter, true);
       });
       return _get(Object.getPrototypeOf(FulcrumDisk.prototype), 'update', this).call(this);
     }
@@ -27611,7 +27658,7 @@ var FulcrumDisk = function (_Disk) {
 exports.default = FulcrumDisk;
 ;
 
-},{"./Disk.js":185,"./Point.js":188}],187:[function(require,module,exports){
+},{"./Disk.js":185,"./Point.js":189}],188:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27638,6 +27685,7 @@ var Link = function () {
 
     this.startFulcrum = startFulcrum;
     this.endFulcrum = endFulcrum;
+    this.drawingDist = drawingDist;
     this.type = "Link";
     this.partId = _guid2.default.raw();
   }
@@ -27660,10 +27708,14 @@ var Link = function () {
   }, {
     key: 'getDrawPoint',
     value: function getDrawPoint() {
-      var vector = _glMatrix2.default.vec2.create();
-
-      _glMatrix2.default.vec2.lerp(vector, this.startFulcrum.getFulcrumPoint().vector, this.endFulcrum.getFulcrumPoint().vector, 0.48);
-      return vector;
+      var vectors = [0, 0].map(function () {
+        return _glMatrix2.default.vec2.create();
+      });
+      _glMatrix2.default.vec2.sub(vectors[0], this.endFulcrum.getFulcrumPoint().vector, this.startFulcrum.getFulcrumPoint().vector);
+      _glMatrix2.default.vec2.normalize(vectors[1], vectors[0]);
+      _glMatrix2.default.vec2.scale(vectors[0], vectors[1], this.drawingDist);
+      _glMatrix2.default.vec2.add(vectors[1], this.startFulcrum.getFulcrumPoint().vector, vectors[0]);
+      return vectors[1];
     }
   }]);
 
@@ -27673,7 +27725,7 @@ var Link = function () {
 exports.default = Link;
 ;
 
-},{"gl-matrix":2,"guid":12}],188:[function(require,module,exports){
+},{"gl-matrix":2,"guid":12}],189:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27712,7 +27764,7 @@ var Point = function () {
 exports.default = Point;
 ;
 
-},{"gl-matrix":2}],189:[function(require,module,exports){
+},{"gl-matrix":2}],190:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27779,7 +27831,7 @@ App.propTypes = {
     height: PropTypes.number
 };
 
-},{"./Part.jsx":192,"react":182}],190:[function(require,module,exports){
+},{"./Part.jsx":194,"react":182}],191:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27844,7 +27896,64 @@ Disk.propTypes = {
     part: PropTypes.object
 };
 
-},{"react":182}],191:[function(require,module,exports){
+},{"react":182}],192:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Component = _react2.default.Component;
+var PropTypes = _react2.default.PropTypes;
+
+var DrawingSurface = function (_Component) {
+    _inherits(DrawingSurface, _Component);
+
+    function DrawingSurface() {
+        _classCallCheck(this, DrawingSurface);
+
+        return _possibleConstructorReturn(this, Object.getPrototypeOf(DrawingSurface).apply(this, arguments));
+    }
+
+    _createClass(DrawingSurface, [{
+        key: "render",
+        value: function render() {
+            return _react2.default.createElement(
+                "g",
+                null,
+                _react2.default.createElement("path", { d: this.props.part.path,
+                    strokeWidth: "1",
+                    stroke: "#000",
+                    fill: "none" })
+            );
+        }
+    }]);
+
+    return DrawingSurface;
+}(Component);
+
+exports.default = DrawingSurface;
+
+
+DrawingSurface.propTypes = {
+    part: PropTypes.object
+};
+
+},{"react":182}],193:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27889,7 +27998,7 @@ var Link = function (_Component) {
                     x2: this.props.part.end().x,
                     y2: this.props.part.end().y,
                     stroke: "#000",
-                    "stroke-width": "2" }),
+                    strokeWidth: "2" }),
                 _react2.default.createElement("circle", { cx: drawPoint[0],
                     cy: drawPoint[1],
                     r: "10",
@@ -27909,7 +28018,7 @@ Link.propTypes = {
     part: PropTypes.object
 };
 
-},{"react":182}],192:[function(require,module,exports){
+},{"react":182}],194:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27930,6 +28039,10 @@ var _Link = require('./Link.jsx');
 
 var _Link2 = _interopRequireDefault(_Link);
 
+var _DrawingSurface = require('./DrawingSurface.jsx');
+
+var _DrawingSurface2 = _interopRequireDefault(_DrawingSurface);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -27944,7 +28057,8 @@ var PropTypes = _react2.default.PropTypes;
 
 var PartTypes = {
     'Disk': _Disk2.default,
-    'Link': _Link2.default
+    'Link': _Link2.default,
+    'DrawingSurface': _DrawingSurface2.default
 };
 
 var Part = function (_Component) {
@@ -27974,4 +28088,4 @@ Part.propTypes = {
     part: PropTypes.object
 };
 
-},{"./Disk.jsx":190,"./Link.jsx":191,"react":182}]},{},[183]);
+},{"./Disk.jsx":191,"./DrawingSurface.jsx":192,"./Link.jsx":193,"react":182}]},{},[183]);
