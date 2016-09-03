@@ -1,3 +1,5 @@
-module.exports = {
-  ONE_FRAME: 32
-};
+"use strict";
+export default Object.freeze({
+  ONE_FRAME: 15,
+  DEFAULT_RADIUS: 25
+});

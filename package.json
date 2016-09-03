@@ -19,6 +19,7 @@
   "dependencies": {
     "babel-preset-react": "^6.11.1",
     "d3": "^3.5.16",
+    "events": "^1.1.1",
     "gl-matrix": "^2.3.2",
     "guid": "0.0.12",
     "react": "^15.3.1",

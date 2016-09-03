@@ -1,18 +1,87 @@
-import glMatrix from 'gl-matrix';
 import constants from '../constants.js';
 import Point from './Point.js';
 import Guid from 'guid';
+import rotateAroundAPoint from '../utilities/rotateAroundAPoint.js';
+import PartPlacer from '../utilities/PartPlacer.js';
+import {EventEmitter} from 'events';
+import distanceFormula from '../utilities/distanceFormula.js';
 
-export default class Disk {
-  constructor (x, y, options) {
+export default class Disk extends EventEmitter {
+  constructor (x, y, radius, options) {
+    super();
     options = options || {};
     this.clockwise = options.clockwise || true;
     this.millisecondsPerRotation = options.millisecondsPerRotation || 1000;
+    this.rotationCenter = options.rotationCenter;
+    this.diskRotationSpeed = options.speedAroundCenter || 3000;
+    this.radius = radius;
     this.x = x;
     this.y = y;
     this.points = [];
     this.partId = Guid.raw();
     this.type = 'Disk';
+    this.fillColor = "transparent";
+    if (options.setByMouse) { 
+      this.setByMouse();
+    } else {
+      this.addPoint(new Point(x+radius, y));
+    }
+  }
+
+  setMPR(mpr) {
+    this.millisecondsPerRotation = mpr;
+    this.emit('update');
+  }
+
+  setByMouse() {
+    this.partPlacer = new PartPlacer();
+    this.partPlacer.on('positionUpdate', this.positionUpdate.bind(this));
+    this.partPlacer.on('positionChoose', this.positionChoose.bind(this));
+  }
+
+  positionChoose(x, y) {
+    this.positionUpdate(x, y);
+    this.unbindPartPlacer();
+    this.partPlacer.on('positionUpdate', this.radiusUpdate.bind(this));
+    this.partPlacer.on('positionChoose', this.finishPositionSet.bind(this));
+  }
+
+  unbindPartPlacer() {
+    this.partPlacer.removeAllListeners('positionUpdate');
+    this.partPlacer.removeAllListeners('positionChoose');
+  }
+
+  radiusUpdate(x, y) {
+    this.radius = distanceFormula([x,y], [this.x, this.y]);
+    this.emit('update');
+  }
+
+  finishPositionSet(x, y) {
+    this.radiusUpdate(x, y);
+    this.unbindPartPlacer();
+    this.partPlacer.removeEvents();
+    this.partPlacer = null;
+    this.emit('update');
+  }
+
+  positionUpdate(x, y) {
+    this.x = x;
+    this.y = y;
+    this.emit('update');
+  }
+
+  centerFpr(elapsed) {
+    return this.diskRotationSpeed/elapsed;
+  }
+
+  rotateDiskAroundCenter() {
+    const newPoints = rotateAroundAPoint(this.centerFpr(10), {x: this.x, y: this.y}, this.rotationCenter, true);
+    this.x = newPoints.x;
+    this.y = newPoints.y;
+  }
+
+  getFulcrumPoint() {
+    return this.points[0];
   }
 
   calculateFramesPR (elapsedTime) {
@@ -26,6 +95,7 @@ export default class Disk {
 
   setMillisecondsPerRotation (milliseconds) {
     this.millisecondsPerRotation = milliseconds;
+    this.emit('update');
     return this;
   }
 
@@ -35,31 +105,32 @@ export default class Disk {
   }
 
   rotatePoint (fpr, point) {
-    return this.rotateAroundAPoint(fpr, point, {x: this.x, y: this.y}, this.clockwise);
-  }
-
-  rotateAroundAPoint (fpr, point, center, clockwise) {
-    const deltaX = point.x - center.x;
-    const deltaY = point.y - center.y;
-    const radius = Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
-    const curTheta = Math.atan2(deltaY, deltaX);
-    const circumfrence = 2 * Math.PI * radius;
-    const distance = circumfrence/fpr;
-    const deltaTheta = distance/radius;
-    const newTheta = clockwise ? curTheta - deltaTheta : curTheta + deltaTheta;
-    const newDeltaX = radius * Math.cos(newTheta);
-    const newDeltaY = radius * Math.sin(newTheta);
-    return new Point(center.x + newDeltaX, center.y + newDeltaY);
+    return rotateAroundAPoint(fpr, point, {x: this.x, y: this.y}, this.clockwise);
   }
 
   update (timestamp) {
-    // if(!this.timestamp) {
-    //   this.timestamp = timestamp;
-    //   return this;
-    // }
-    // var elapsedTime = timestamp - this.timestamp;
-    // this.timestamp = timestamp;
+    this.rotateDiskAroundCenter();
+    this.points = this.points.map((point) => {
+        return rotateAroundAPoint(this.centerFpr(10), point, this.rotationCenter, true);
+    });
     this.points = this.rotatePoints(10);
     return this;
   }
+
+  readyForLink() {
+    this.isReadyForLink = true;
+    this.emit('update');
+  }
+
+  setFillColor(color) {
+    this.fillColor = color;
+    this.emit('update');
+  }
+
+  addToLink() {
+    this.isReadyForLink = false;
+    this.addPoint(new Point(this.x + this.radius, this.y))
+    this.emit('addedToLink', this);
+  }
+
 };

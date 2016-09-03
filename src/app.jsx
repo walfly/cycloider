@@ -1,108 +1,80 @@
 import React from 'react';
 import ReactDom from 'react-dom';
-import FulcrumDisk from './parts/FulcrumDisk.js';
 import Disk from './parts/Disk.js';
 import Link from './parts/Link.js';
 import Point from './parts/Point.js';
 import DrawingSurface from './parts/DrawingSurface.js';
 import App from './reactComponents/App.jsx';
+import ControlsApp from './reactComponents/ControlsApp.jsx';
+import constants from './constants.js';
+import PartDetails from './reactComponents/PartDetails.jsx';
 
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-const disk1 = new FulcrumDisk(235, 435, 265, {
-  millisecondsPerRotation: 2323,
-  rotationCenter: new Point(width/2, height/2),
-  speedAroundCenter: 4000
-});
+const pageCenter = new Point(width/2, height/2);
 
-const disk2 = new FulcrumDisk(width - 103, height - 103, 103, {
-  millisecondsPerRotation: 534,
-  rotationCenter: new Point(width/2, height/2),
-  speedAroundCenter: 4000
-});
+const parts = [];
 
-const link = new Link(disk1, disk2, 500);
+const drawingPlaneUpdate = function () {
+  app.setState({parts: parts});
+  details.setState({parts: parts});
+};
 
-const drawingSurface = new DrawingSurface(link);
+const clockwise = function (e) {
+  addDisk(e.pageX, e.pageY, true);
+};
 
-const parts = [
-  disk1,
-  disk2,
-  link,
-  drawingSurface
-];
+const counterclockwise = function (e) {
+  addDisk(e.pageX, e.pageY, false);
+};
 
-const app = ReactDom.render(<App width={width} height={height} parts={parts} />, document.getElementById('app'));
+const addDisk = function(x, y, clockwise) {
+  const disk = new Disk(x, y, constants.DEFAULT_RADIUS, {
+    clockwise,
+    rotationCenter: pageCenter,
+    setByMouse: true
+  });
+  parts.push(disk);
+  disk.on('update', drawingPlaneUpdate);
+};
+
+const createSurface = function(link) {
+  const drawingSurface = new DrawingSurface(link);
+  parts.push(drawingSurface);
+};
+
+const addLink = function(e) {
+  const link = new Link();
+  parts.forEach((part) => {
+    part.readyForLink();
+    part.on('addedToLink', link.addPart.bind(link));
+  });
+  parts.push(link);
+  link.on('update', drawingPlaneUpdate);
+  link.on('choseDrawpoint', createSurface.bind(null, link));
+};
 
 const update = function () {
   parts.forEach(part => part.update());
-  app.setState({parts: parts});
+  drawingPlaneUpdate();
 };
-// var svg = d3.select("body").append("svg")
-//     .attr("width", width)
-//     .attr("height", height);
 
-// var linkGroup = svg.append('g');
-// var cycleGroup = svg.append('g');
+const play = function () {
+  setInterval(update, 16);
+};
 
-// var linearFunction = d3.svg.line()
-//                            .x(function(d){return d.x})
-//                            .y(function(d){return d.y})
-//                            .interpolate('basis');
+const app = ReactDom.render(<App width={width}
+                                 height={height}
+                                 parts={parts} />,
+                                 document.getElementById('app'));
 
-// function update (timestamp) {
-//   disk1.rotateDiskAroundCenter();
-//   disk2.rotateDiskAroundCenter();
-//   link.update(timestamp);
-//   var drawingPoint = link.getDrawPoint();
-//   drawing.push(new Point(drawingPoint[0], drawingPoint[1]));
+const details = ReactDom.render(<PartDetails parts={parts} />,
+                                 document.getElementById('details'));
 
-//   var dp = linkGroup.selectAll('circle')
-//             .data([
-//               drawingPoint,
-//               [disk1.x, disk1.y],
-//               [disk2.x, disk2.y], 
-//               [disk1.getFulcrumPoint().x, disk1.getFulcrumPoint().y],
-//               [disk2.getFulcrumPoint().x, disk2.getFulcrumPoint().y]
-//               ]);
+const controls = ReactDom.render(<ControlsApp onClockwise={clockwise}
+                                              onCounterclockwise={counterclockwise}
+                                              onLink={addLink}
+                                              onPlay={play}/>,
+                                              document.getElementById('controls'));
 
-//   dp.enter().append('circle')
-//             .attr('r', 10)
-//             .style('fill', 'red');
-  
-//   dp.attr('cx', function(d) {return d[0]})
-//     .attr('cy', function(d) {return d[1]});
-
-//   dp.exit().remove();
-
-//   cycleGroup.selectAll('path').remove();
-
-
-//   cycleGroup.append('path').datum(drawing)
-//                            .attr('d', linearFunction)
-//                            .style('fill', 'none')
-//                            .style('stroke', "#000")
-//                            .attr('stroke-width', 1);
-
-//   var links = linkGroup.selectAll("line")
-//            .data([link]);
-
-//   links.enter()
-//            .append('line')
-//            .attr("stroke-width", 5)
-//            .style("stroke", 'blue');
-
-//   links.exit().remove();
-
-//   links.attr("x1", function (d) { return d.start.getFulcrumPoint().x; })
-//         .attr("y1", function (d) { return d.start.getFulcrumPoint().y; })
-//         .attr("x2", function (d) { return d.end.getFulcrumPoint().x; })
-//         .attr("y2", function (d) { return d.end.getFulcrumPoint().y; });
-
-//   // window.requestAnimationFrame(update);
-// };
-
-setInterval(update, 16);
-
-// window.requestAnimationFrame(update);

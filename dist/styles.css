@@ -1,0 +1,34 @@
+div {
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    margin: 0;
+}
+
+#controls{
+    position: absolute;
+    display: block;
+    top: 90vh;
+    width: 30vw;
+    left: 35vw;
+    padding: 5px;
+    text-align: center;
+    margin: auto;
+    border: 1px solid #000;
+}
+
+#controls button{
+    margin: auto;
+    display: inline-block;
+}
+
+#details{
+    position: absolute;;
+    display: block;
+    width: 200px;
+    top: 30px;
+    left: 30px;
+    border: 1px solid #000;
+}
