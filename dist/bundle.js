@@ -28498,6 +28498,11 @@ var DiskDetails = function (_Component) {
                 "li",
                 null,
                 _react2.default.createElement(
+                    "h4",
+                    null,
+                    "Disk"
+                ),
+                _react2.default.createElement(
                     "label",
                     { htmlFor: "spr" },
                     " Seconds Per Rotation "

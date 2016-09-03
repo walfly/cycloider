@@ -14,6 +14,7 @@ export default class DiskDetails extends Component {
     render() {
         return (
             <li>
+                <h4>Disk</h4>
                 <label htmlFor="spr"> Seconds Per Rotation </label>
                 <input value={this.props.part.millisecondsPerRotation/1000}
                        name="spr"
