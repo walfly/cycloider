@@ -28048,6 +28048,9 @@ var Link = function (_EventEmitter) {
       }
     }
   }, {
+    key: 'setDrawingDist',
+    value: function setDrawingDist() {}
+  }, {
     key: 'chooseDraw',
     value: function chooseDraw(x, y) {
       var cp = this.closestPoint(x, y);
@@ -28507,9 +28510,10 @@ var DiskDetails = function (_Component) {
                     { htmlFor: "spr" },
                     " Seconds Per Rotation "
                 ),
-                _react2.default.createElement("input", { value: this.props.part.millisecondsPerRotation / 1000,
+                _react2.default.createElement("input", { value: (this.props.part.millisecondsPerRotation / 1000).toFixed(4),
                     name: "spr",
                     type: "number",
+                    step: "0.0001",
                     onChange: function onChange(e) {
                         _this2.sprChange(e);
                     } })
@@ -28745,12 +28749,32 @@ var LinkDetails = function (_Component) {
     }
 
     _createClass(LinkDetails, [{
+        key: "drawDistChange",
+        value: function drawDistChange() {}
+    }, {
         key: "render",
         value: function render() {
+            var _this2 = this;
+
             return _react2.default.createElement(
                 "li",
                 null,
-                "link"
+                _react2.default.createElement(
+                    "h4",
+                    null,
+                    "link"
+                ),
+                _react2.default.createElement(
+                    "label",
+                    { htmlFor: "drawDist" },
+                    " Distance Of Pen Tool "
+                ),
+                _react2.default.createElement("input", { value: this.props.part.drawingDist,
+                    name: "drawDist",
+                    type: "number",
+                    onChange: function onChange(e) {
+                        _this2.drawDistChange(e);
+                    } })
             );
         }
     }]);

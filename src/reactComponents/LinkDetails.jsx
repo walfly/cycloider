@@ -5,10 +5,18 @@ import React from 'react';
 const {Component, PropTypes} = React;
 
 export default class LinkDetails extends Component {
+    drawDistChange() {
+
+    }
     render() {
         return (
             <li>
-                link
+                <h4>link</h4>
+                <label htmlFor="drawDist"> Distance Of Pen Tool </label>
+                <input value={this.props.part.drawingDist}
+                       name="drawDist"
+                       type="number"
+                       onChange={(e) => { this.drawDistChange(e); }}/>
             </li>
         );
     }

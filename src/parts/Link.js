@@ -17,6 +17,11 @@ export default class Link extends EventEmitter {
     this.type = "Link";
     this.partId = Guid.raw();
   }
+  createUrlString() {
+    return "L" + this.startFulcrum.partId + "+" +
+           this.endFulcrum.partId + "+" +
+           this.drawingDist;
+  }
   start() {
     if (this.startFulcrum) {
       return this.startFulcrum.points[0];
@@ -38,6 +43,9 @@ export default class Link extends EventEmitter {
       this.partPlacer.on('positionUpdate', this.moveDraw.bind(this));
       this.partPlacer.on('positionChoose', this.chooseDraw.bind(this));
     }
+  }
+  setDrawingDist() {
+
   }
   chooseDraw(x, y) {
     const cp = this.closestPoint(x, y);
@@ -90,4 +98,22 @@ export default class Link extends EventEmitter {
     glMatrix.vec2.add(vectors[1], this.startFulcrum.getFulcrumPoint().vector, vectors[0])
     return vectors[1];
   }
+};
+
+export const createFromUrlString = function (queryString, parts) {
+  const [
+    startId,
+    endId,
+    drawingDist
+  ] = queryString.substr(1, queryString.length).split('+');
+
+  const start = parts.find((part) => {
+    return part.partId === startId;
+  });
+
+  const end = parts.find((part) => {
+    return part.partId === endId;
+  });
+
+  return new Link(start, end, Number(drawingDist));
 };

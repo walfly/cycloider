@@ -16,9 +16,10 @@ export default class DiskDetails extends Component {
             <li>
                 <h4>Disk</h4>
                 <label htmlFor="spr"> Seconds Per Rotation </label>
-                <input value={this.props.part.millisecondsPerRotation/1000}
+                <input value={(this.props.part.millisecondsPerRotation/1000).toFixed(4)}
                        name="spr"
                        type="number"
+                       step="0.0001"
                        onChange={(e) => { this.sprChange(e); }}/>
             </li>
         );

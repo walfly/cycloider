@@ -18,7 +18,7 @@ export default class Disk extends EventEmitter {
     this.x = x;
     this.y = y;
     this.points = [];
-    this.partId = Guid.raw();
+    this.partId = options.partId || Guid.raw();
     this.type = 'Disk';
     this.fillColor = "transparent";
     if (options.setByMouse) { 
@@ -26,6 +26,17 @@ export default class Disk extends EventEmitter {
     } else {
       this.addPoint(new Point(x+radius, y));
     }
+  }
+
+  createUrlString() {
+    return "D" + Number(this.clockwise) + "+" + 
+      this.millisecondsPerRotation + "+" + 
+      this.rotationCenter.x + "_" + this.rotationCenter.y + "+" +
+      this.diskRotationSpeed + "+" +
+      this.radius + "+" +
+      this.x + "+" +
+      this.y + "+" +
+      this.partId;
   }
 
   setMPR(mpr) {
@@ -133,4 +144,23 @@ export default class Disk extends EventEmitter {
     this.emit('addedToLink', this);
   }
 
+};
+
+export const createFromUrlString = function (queryString) {
+  let [
+    millisecondsPerRotation,
+    rotationCenter,
+    diskRotationSpeed,
+    radius,
+    x,
+    y
+  ] = queryString.substr(1, queryString.length).split('+');
+  rotationCenter = rotationCenter.split('_');
+  const options = {
+    clockwise: !!clockwise,
+    millisecondsPerRotation: Number(millisecondsPerRotation),
+    rotationCenter: new Point(Number(rotationCenter[0], Number(rotationCenter[1])),
+    diskRotationSpeed: Number(diskRotationSpeed),
+  };
+  return new Disk(Number(x), Number(y), Number(radius), options);
 };
