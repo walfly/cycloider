@@ -9,18 +9,19 @@ const scratch = Array.apply(null, {length: 5}).map((item) => {
 });
 
 export default class Link extends EventEmitter {
-  constructor(startFulcrum, endFulcrum, drawingDist){
+  constructor(startFulcrum, endFulcrum, drawingDist, options = {}){
     super();
     this.startFulcrum = startFulcrum;
     this.endFulcrum = endFulcrum;
     this.drawingDist = drawingDist;
     this.type = "Link";
-    this.partId = Guid.raw();
+    this.partId = options.partId || Guid.raw();
   }
   createUrlString() {
     return "L" + this.startFulcrum.partId + "+" +
            this.endFulcrum.partId + "+" +
-           this.drawingDist;
+           this.drawingDist + "+" +
+           this.partId;
   }
   start() {
     if (this.startFulcrum) {
@@ -100,20 +101,21 @@ export default class Link extends EventEmitter {
   }
 };
 
-export const createFromUrlString = function (queryString, parts) {
+export const createLinkFromUrlString = function (queryString, parts) {
   const [
     startId,
     endId,
-    drawingDist
+    drawingDist,
+    partId
   ] = queryString.substr(1, queryString.length).split('+');
-
+  debugger;
   const start = parts.find((part) => {
     return part.partId === startId;
   });
-
+  debugger;
   const end = parts.find((part) => {
     return part.partId === endId;
   });
 
-  return new Link(start, end, Number(drawingDist));
+  return new Link(start, end, Number(drawingDist), {partId});
 };

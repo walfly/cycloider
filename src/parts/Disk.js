@@ -146,21 +146,24 @@ export default class Disk extends EventEmitter {
 
 };
 
-export const createFromUrlString = function (queryString) {
+export const createDiskFromUrlString = function (queryString) {
   let [
+    clockwise,
     millisecondsPerRotation,
     rotationCenter,
     diskRotationSpeed,
     radius,
     x,
-    y
+    y,
+    partId
   ] = queryString.substr(1, queryString.length).split('+');
   rotationCenter = rotationCenter.split('_');
   const options = {
     clockwise: !!clockwise,
     millisecondsPerRotation: Number(millisecondsPerRotation),
-    rotationCenter: new Point(Number(rotationCenter[0], Number(rotationCenter[1])),
+    rotationCenter: new Point(Number(rotationCenter[0]), Number(rotationCenter[1])),
     diskRotationSpeed: Number(diskRotationSpeed),
+    partId
   };
   return new Disk(Number(x), Number(y), Number(radius), options);
 };

@@ -1,11 +1,15 @@
 import Guid from 'guid';
 
 export default class DrawingSurface {
-    constructor(drawingTool) {
+    constructor(drawingTool, id) {
         this.drawingTool = drawingTool;
         this.path = 'M';
         this.type = 'DrawingSurface';
-        this.partId = Guid.raw();
+        this.partId = id || Guid.raw();
+    }
+    createUrlString() {
+        return "S" + this.drawingTool.partId + "+" +
+        this.partId; 
     }
     update(){
         const point = this.drawingTool.getDrawPoint();
@@ -14,3 +18,13 @@ export default class DrawingSurface {
     }
 }
 
+export const createDrawingSurfaceFromUrlString = function (queryString, parts) {
+  const [
+    drawingToolId,
+    partId
+  ] = queryString.substr(1, queryString.length).split('+');
+  const drawingTool = parts.find((part) => {
+    return part.partId === drawingToolId;
+  });
+  return new DrawingSurface(drawingTool, partId);
+};
