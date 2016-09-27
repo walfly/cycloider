@@ -3,6 +3,9 @@ import Guid from 'guid';
 import Point from './Point.js';
 import {EventEmitter} from 'events';
 import PartPlacer from '../utilities/PartPlacer.js';
+import Provider from './provider.js';
+
+const provider = new Provider();
 
 const scratch = Array.apply(null, {length: 5}).map((item) => {
   return glMatrix.vec2.create();
@@ -18,19 +21,21 @@ export default class Link extends EventEmitter {
     this.partId = options.partId || Guid.raw();
   }
   createUrlString() {
-    return "L" + this.startFulcrum.partId + "+" +
-           this.endFulcrum.partId + "+" +
+    return "L" + provider.get(this.startFulcrum).partId + "+" +
+           provider.get(this.endFulcrum).partId + "+" +
            this.drawingDist + "+" +
            this.partId;
   }
   start() {
     if (this.startFulcrum) {
-      return this.startFulcrum.points[0];
+      return provider.get(this.startFulcrum).points[0];
     }
   }
   end() {
-    if (this.endFulcrum) {
+    if (this.endFulcrum && this.endFulcrum.points) {
       return this.endFulcrum.points[0];
+    } else if (this.endFulcrum) {
+      return provider.get(this.endFulcrum).points[0];
     }
   }
   addPart(part) {
@@ -43,7 +48,14 @@ export default class Link extends EventEmitter {
       this.unbindPartPlacer();
       this.partPlacer.on('positionUpdate', this.moveDraw.bind(this));
       this.partPlacer.on('positionChoose', this.chooseDraw.bind(this));
+      this.emit('connected');
     }
+  }
+  readyForLink() {
+    this.isReadyForLink = true;
+  }
+  unreadyForLink() {
+    this.isReadyForLink = false;
   }
   setDrawingDist() {
 
@@ -54,13 +66,12 @@ export default class Link extends EventEmitter {
     this.unbindPartPlacer();
     this.partPlacer.removeEvents();
     this.partPlacer = null;
-    this.emit('update');
-    this.emit('choseDrawpoint');
+    this.emit('updateConfig');
   }
   moveDraw(x, y) {
     const cp = this.closestPoint(x, y);
     this.drawingDist = glMatrix.vec2.dist(cp, this.start().vector);
-    this.emit('update');
+    this.emit('updateConfig');
   }
   closestPoint(x,y) {
     const point = glMatrix.vec2.set(scratch[0], x, y);
@@ -84,7 +95,7 @@ export default class Link extends EventEmitter {
     this.endFulcrum = {
       points: [new Point(x,y)]
     };
-    this.emit('update');
+    this.emit('updateConfig');
   }
   update(timestamp){
     return this;
@@ -93,29 +104,21 @@ export default class Link extends EventEmitter {
     const vectors = [0,0].map(() => { 
       return glMatrix.vec2.create();
     });
-    glMatrix.vec2.sub(vectors[0], this.endFulcrum.getFulcrumPoint().vector, this.startFulcrum.getFulcrumPoint().vector);
+    glMatrix.vec2.sub(vectors[0], provider.get(this.endFulcrum).getFulcrumPoint().vector, provider.get(this.startFulcrum).getFulcrumPoint().vector);
     glMatrix.vec2.normalize(vectors[1], vectors[0]);
     glMatrix.vec2.scale(vectors[0], vectors[1], this.drawingDist);
-    glMatrix.vec2.add(vectors[1], this.startFulcrum.getFulcrumPoint().vector, vectors[0])
+    glMatrix.vec2.add(vectors[1], provider.get(this.startFulcrum).getFulcrumPoint().vector, vectors[0])
     return vectors[1];
   }
 };
 
-export const createLinkFromUrlString = function (queryString, parts) {
+export const createLinkFromUrlString = function (queryString) {
   const [
     startId,
     endId,
     drawingDist,
     partId
   ] = queryString.substr(1, queryString.length).split('+');
-  debugger;
-  const start = parts.find((part) => {
-    return part.partId === startId;
-  });
-  debugger;
-  const end = parts.find((part) => {
-    return part.partId === endId;
-  });
 
-  return new Link(start, end, Number(drawingDist), {partId});
+  return new Link(startId, endId, Number(drawingDist), {partId});
 };

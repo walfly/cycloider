@@ -41,7 +41,6 @@ export default class Disk extends EventEmitter {
 
   setMPR(mpr) {
     this.millisecondsPerRotation = mpr;
-    this.emit('update');
   }
 
   setByMouse() {
@@ -64,7 +63,7 @@ export default class Disk extends EventEmitter {
 
   radiusUpdate(x, y) {
     this.radius = distanceFormula([x,y], [this.x, this.y]);
-    this.emit('update');
+    this.emit('updateConfig');
   }
 
   finishPositionSet(x, y) {
@@ -72,13 +71,13 @@ export default class Disk extends EventEmitter {
     this.unbindPartPlacer();
     this.partPlacer.removeEvents();
     this.partPlacer = null;
-    this.emit('update');
+    this.emit('updateConfig');
   }
 
   positionUpdate(x, y) {
     this.x = x;
     this.y = y;
-    this.emit('update');
+    this.emit('updateConfig');
   }
 
   centerFpr(elapsed) {
@@ -106,7 +105,7 @@ export default class Disk extends EventEmitter {
 
   setMillisecondsPerRotation (milliseconds) {
     this.millisecondsPerRotation = milliseconds;
-    this.emit('update');
+    this.emit('updateConfig');
     return this;
   }
 
@@ -130,18 +129,21 @@ export default class Disk extends EventEmitter {
 
   readyForLink() {
     this.isReadyForLink = true;
-    this.emit('update');
+  }
+
+  unreadyForLink() {
+    this.isReadyForLink = false;
   }
 
   setFillColor(color) {
     this.fillColor = color;
-    this.emit('update');
+    this.emit('updateConfig');
   }
 
   addToLink() {
     this.isReadyForLink = false;
     this.addPoint(new Point(this.x + this.radius, this.y))
-    this.emit('addedToLink', this);
+    this.emit('addedToLink', this.partId);
   }
 
 };
