@@ -67,9 +67,7 @@ export default function (queryString) {
         return 0;
     });
     let current
-    debugger;
     while (ids.length) {
-        debugger;
         current = ids.pop();
         if (parts[current].depCount === 0 ) {
             returnParts.push(parts[current].createPart(returnParts));

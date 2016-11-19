@@ -18,9 +18,11 @@ export default class ControlsApp extends Component {
     render() {
         return (
             <div className="control-app">
-                <button onClick={(e) => this.clockwise(e)}> clockwise </button>
-                <button onClick={(e) => this.counterclockwise(e)}> counterclockwise </button>
-                <button onClick={(e) => this.link(e)}> Link </button>
+            {
+                // <button onClick={(e) => this.clockwise(e)}> clockwise </button>
+                // <button onClick={(e) => this.counterclockwise(e)}> counterclockwise </button>
+                // <button onClick={(e) => this.link(e)}> Link </button>
+            }
                 <button onClick={(e) => this.play(e)}> play </button>
             </div>
         );

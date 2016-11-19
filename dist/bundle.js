@@ -28199,7 +28199,8 @@ var app = _reactDom2.default.render(_react2.default.createElement(_App2.default,
   height: height,
   parts: parts }), document.getElementById('app'));
 
-var details = _reactDom2.default.render(_react2.default.createElement(_PartDetails2.default, { parts: parts }), document.getElementById('details'));
+// const details = ReactDom.render(<PartDetails parts={parts} />,
+//                                  document.getElementById('details'));
 
 var controls = _reactDom2.default.render(_react2.default.createElement(_ControlsApp2.default, { onClockwise: clockwise,
   onCounterclockwise: counterclockwise,
@@ -28875,27 +28876,6 @@ var ControlsApp = function (_Component) {
             return _react2.default.createElement(
                 "div",
                 { className: "control-app" },
-                _react2.default.createElement(
-                    "button",
-                    { onClick: function onClick(e) {
-                            return _this2.clockwise(e);
-                        } },
-                    " clockwise "
-                ),
-                _react2.default.createElement(
-                    "button",
-                    { onClick: function onClick(e) {
-                            return _this2.counterclockwise(e);
-                        } },
-                    " counterclockwise "
-                ),
-                _react2.default.createElement(
-                    "button",
-                    { onClick: function onClick(e) {
-                            return _this2.link(e);
-                        } },
-                    " Link "
-                ),
                 _react2.default.createElement(
                     "button",
                     { onClick: function onClick(e) {
@@ -29637,9 +29617,7 @@ exports.default = function (queryString) {
         return 0;
     });
     var current = void 0;
-    debugger;
     while (ids.length) {
-        debugger;
         current = ids.pop();
         if (parts[current].depCount === 0) {
             returnParts.push(parts[current].createPart(returnParts));

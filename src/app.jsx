@@ -76,8 +76,8 @@ const app = ReactDom.render(<App width={width}
                                  parts={parts} />,
                                  document.getElementById('app'));
 
-const details = ReactDom.render(<PartDetails parts={parts} />,
-                                 document.getElementById('details'));
+// const details = ReactDom.render(<PartDetails parts={parts} />,
+//                                  document.getElementById('details'));
 
 const controls = ReactDom.render(<ControlsApp onClockwise={clockwise}
                                               onCounterclockwise={counterclockwise}
